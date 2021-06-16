@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import bot.display.embed as disp
 from bot.api.fetch import get_challenges
 from bot.colors import green, red
-from bot.constants import LANGS, FILENAME
+from bot.constants import LANGS, FILENAME, BOT
 from bot.database.manager import DatabaseManager
 from bot.wraps import update_challenges
 
@@ -16,17 +16,13 @@ load_dotenv()
 TOKEN = environ.get('TOKEN')
 BOT_CHANNEL = environ.get('BOT_CHANNEL')
 SLEEP = int(environ.get('SLEEP_TIME'))
-_BOT = None
-
-def get_bot():
-    return _BOT
 class RootMeBot:
 
     def __init__(self, db: DatabaseManager):
         """ Discord Bot to catch RootMe events made by zTeeed """
         self.db = db
         self.bot = commands.Bot(command_prefix='!')
-        _BOT = self.bot
+        BOT = self.bot
 
     async def cron(self):
         await self.bot.wait_until_ready()
