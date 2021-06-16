@@ -7,6 +7,8 @@ from typing import Dict, List, Optional, Tuple, Union
 from discord.channel import TextChannel
 from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
+from discord import ActivityType,Activity,Status
+from main import bot
 
 import bot.manage.channel_data as channel_data
 from bot.api.fetch import search_rootme_user, get_solved_challenges, get_diff, get_all_challenges
@@ -19,7 +21,9 @@ from bot.wraps import stop_if_args_none
 
 challenges_type = Optional[Dict[str, Union[str, int, List[str]]]]
 all_challenges = {}  #  all challenges by discord_server
-
+OK=1
+WARN=2
+ERR=3
 
 def display_parts(message: str) -> List[str]:
     message = message.split('\n')
@@ -254,7 +258,7 @@ async def display_reset_database(db: DatabaseManager, id_discord_server: int, bo
     return add_emoji(bot, f'Database has been successfully reset', emoji2)
 
 
-async def display_cron(id_discord_server: int, db: DatabaseManager) -> List[Tuple[Optional[str], Optional[str]]]:
+async def display_cron(id_discord_server: int, db: DatabaseManager, channel: TextChannel) -> List[Tuple[Optional[str], Optional[str]]]:
     # check updates about challenges data
     global all_challenges
     
@@ -300,19 +304,20 @@ async def display_cron(id_discord_server: int, db: DatabaseManager) -> List[Tupl
             new_challenges_solved = user_data['validations'][::-1]  # all solves because there was no solve before + reverse
         
         for new_challenge in new_challenges_solved:
-            challenge_info = await Parser.extract_challenge_info(new_challenge['id_challenge'])
-            if challenge_info is None:
-                continue
-            score += int(challenge_info["score"])
-            green(f'{user["rootme_username"]} --> {unescape(challenge_info["titre"])}')
-            message_title = f'New challenge solved by {user["rootme_username"]}'
-            tosend = f' • {unescape(challenge_info["titre"])} ({challenge_info["score"]} points)'
-            tosend += f'\n • Category: {challenge_info["rubrique"]}'
-            #  tosend += f'\n • URL: {challenge_info["url_challenge"]}'
-            tosend += f'\n • Difficulty: {challenge_info["difficulte"]}'
-            tosend += f'\n • Date: {new_challenge["date"]}'
-            tosend += f'\n • New score: {score}'
-            messages.append((message_title, tosend))
+            with channel.typing():
+                challenge_info = await Parser.extract_challenge_info(new_challenge['id_challenge'])
+                if challenge_info is None:
+                    continue
+                score += int(challenge_info["score"])
+                green(f'{user["rootme_username"]} --> {unescape(challenge_info["titre"])}')
+                message_title = f'New challenge solved by {user["rootme_username"]}'
+                tosend = f' • {unescape(challenge_info["titre"])} ({challenge_info["score"]} points)'
+                tosend += f'\n • Category: {challenge_info["rubrique"]}'
+                #  tosend += f'\n • URL: {challenge_info["url_challenge"]}'
+                tosend += f'\n • Difficulty: {challenge_info["difficulte"]}'
+                tosend += f'\n • Date: {new_challenge["date"]}'
+                tosend += f'\n • New score: {score}'
+                messages.append((message_title, tosend))
         
         score = int(user_data["score"])
         number_challenge_solved = len(user_data["validations"])
@@ -320,6 +325,16 @@ async def display_cron(id_discord_server: int, db: DatabaseManager) -> List[Tupl
 
     return messages
 
+async def bot_status(status:int, message: str) -> bool:
+    bot.bot.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
+
+def get_status(status:int):
+    if status == OK:
+        return Status.online
+    elif status == WARN:
+        return Status.idle
+    elif status == ERR:
+        return Status.do_not_disturb
 
 async def display_api_query(path: str) -> Optional[str]:
     return await Parser.make_custom_query(path)

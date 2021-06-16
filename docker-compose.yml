@@ -4,7 +4,7 @@ services:
     build: .
     restart: always
     environment:
-      - BOT_CHANNEL=root-me-news
+      - BOT_CHANNEL=activity
       - TOKEN=token
       - ROOTME_API_KEY=Your Root-Me API key found on your Root-Me profile
     volumes:

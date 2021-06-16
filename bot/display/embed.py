@@ -198,7 +198,7 @@ async def check_new_server(channel: TextChannel, server: Guild, db: DatabaseMana
 
 async def cron(channel: TextChannel, server: Guild, db: DatabaseManager, bot: Bot) -> None:
     await check_new_server(channel, server, db, bot.command_prefix)
-    messages = await show.display_cron(server.id, db)
+    messages = await show.display_cron(server.id, db, channel)
     for tosend_cron, name in messages:
         if tosend_cron is not None:
             await interrupt(channel, tosend_cron, embed_color=0xFFCC00, embed_name=name)

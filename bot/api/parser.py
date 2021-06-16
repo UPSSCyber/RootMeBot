@@ -12,6 +12,7 @@ import asyncio
 
 from bot.colors import red, purple, yellow
 from bot.constants import URL, timeout
+from bot.display.show import bot_status, OK, WARN, ERR
 
 load_dotenv()
 response_profile = Optional[List[Dict[str, Any]]]
@@ -20,19 +21,21 @@ response_profile_complete = Optional[Dict[str, Any]]
 ROOTME_ACCOUNT_LOGIN = environ.get('ROOTME_ACCOUNT_LOGIN')
 ROOTME_ACCOUNT_PASSWORD = environ.get('ROOTME_ACCOUNT_PASSWORD')
 ROOTME_API_KEY = environ.get('ROOTME_API_KEY')
+SLEEP = int(environ.get('SLEEP_TIME'))
 
 cookie_jar = aiohttp.CookieJar()
 cookie_jar.update_cookies({"api_key": ROOTME_API_KEY})
 
 async def get_cookies():
     async with aiohttp.ClientSession(cookie_jar=cookie_jar) as session:
-        await asyncio.sleep(1)
+        await asyncio.sleep(SLEEP)
         data = dict(login=ROOTME_ACCOUNT_LOGIN, password=ROOTME_ACCOUNT_PASSWORD)
         try:
             async with session.post(f'{URL}/login', data=data, timeout=timeout) as response:
                 print(response)
                 if response.status == 200:
                     content = await response.json(content_type=None)
+                    bot_status(OK,"Connected")
                     return "Logged in"
                 elif response.status == 429:   # Too Many requests
                     return await get_cookies()
@@ -40,44 +43,60 @@ async def get_cookies():
                 sys.exit(0)
         except asyncio.TimeoutError:
             return await get_cookies()
+        except:
+            bot_status(ERR,"💀 Unable to log-in")
+            return await get_cookies()
 
 
 async def get_status():
-    await asyncio.sleep(1)
+    await asyncio.sleep(SLEEP)
     async with aiohttp.ClientSession(cookie_jar=cookie_jar) as session:
         try:
             async with session.get(f'{URL}/challenges', timeout=timeout) as response:
                 if response.status == 429:
+                    bot_status(WARN,"killall -SIGKILL python")
                     return await get_status()
+                bot_status(OK,"Connecté")
                 return response.status
         except asyncio.TimeoutError:
+            bot_status(WARN,"killall -SIGKILL python")
+            return await get_status()
+        except:
+            bot_status(WARN,"killall -SIGKILL python")
             return await get_status()
 
 
 async def request_to(url: str) -> response_profile:
-    await asyncio.sleep(1)
+    await asyncio.sleep(SLEEP)
     async with aiohttp.ClientSession(cookie_jar=cookie_jar) as session:
         try:
             async with session.get(url, timeout=timeout) as response:
                 print(response)
-                yellow("Session : " + str([c for c in session.cookie_jar]))
+                #yellow("Session : " + str([c for c in session.cookie_jar]))
                 if response.url.host not in URL:  # website page is returned not API (api.www.root-me.org / www.root-me.org)
                     return None
                 #  purple(f'[{response.status}] {url}')
                 if response.status == 200:
                     return await response.json()
                 elif response.status == 401:
+                    bot_status(WARN,"killall -SIGKILL python")
                     if await get_status() == 200:
                         purple(f'{url} -> probably a premium challenge')
                         return None
                     await get_cookies()
                     return await request_to(url)
                 elif response.status == 429:   # Too Many requests
+                    bot_status(WARN,"killall -SIGKILL python")
                     return await request_to(url)
                 else:
+                    bot_status(ERR,"Wtf ?")
                     return None
         except asyncio.TimeoutError:
-                return await request_to(url)
+            bot_status(WARN,"killall -SIGKILL python")
+            return await request_to(url)
+        except:
+            bot_status(WARN,"killall -SIGKILL python")
+            return await request_to(url)
 
 
 async def extract_json(url: str) -> response_profile:
