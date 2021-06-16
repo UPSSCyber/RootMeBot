@@ -16,14 +16,17 @@ load_dotenv()
 TOKEN = environ.get('TOKEN')
 BOT_CHANNEL = environ.get('BOT_CHANNEL')
 SLEEP = int(environ.get('SLEEP_TIME'))
+_BOT = None
 
-
+def get_bot():
+    return _BOT
 class RootMeBot:
 
     def __init__(self, db: DatabaseManager):
         """ Discord Bot to catch RootMe events made by zTeeed """
         self.db = db
         self.bot = commands.Bot(command_prefix='!')
+        _BOT = self.bot
 
     async def cron(self):
         await self.bot.wait_until_ready()

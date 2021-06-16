@@ -11,9 +11,8 @@ from dotenv import load_dotenv
 import asyncio
 
 from bot.colors import red, purple, yellow
-from bot.constants import URL, timeout
+from bot.constants import URL, timeout, BOT
 from discord import ActivityType,Activity,Status
-from main import bot
 OK=1
 WARN=2
 ERR=3
@@ -141,8 +140,8 @@ class Parser:
         return await extract_json(f'{URL}{path}')
 
 async def bot_status(status:int, message: str) -> bool:
-    bot.bot.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
-    
+    BOT.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
+
 def get_status(status:int):
     if status == OK:
         return Status.online

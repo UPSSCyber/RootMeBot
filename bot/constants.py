@@ -1,3 +1,6 @@
+from discord.ext.commands.bot import Bot
+
+
 emoji1 = 'dab'
 emoji2 = 'ok_hand'
 emoji3 = 'thinking'
@@ -18,3 +21,4 @@ PROJECT_INFORMATION = {
     f'Github repository: [{GITHUB_REPOSITORY}]({GITHUB_REPOSITORY})',
     'footer': f'Root Me Discord Bot v{VERSION}'
 }
+BOT :Bot = None
