@@ -38,7 +38,7 @@ async def get_cookies():
                 print(response)
                 if response.status == 200:
                     content = await response.json(content_type=None)
-                    bot_status(OK,"Connected")
+                    bot_status(OK,"All is fine")
                     return "Logged in"
                 elif response.status == 429:   # Too Many requests
                     return await get_cookies()
@@ -80,6 +80,7 @@ async def request_to(url: str) -> response_profile:
                     return None
                 #  purple(f'[{response.status}] {url}')
                 if response.status == 200:
+                    bot_status(OK,"All is fine")
                     return await response.json()
                 elif response.status == 401:
                     bot_status(WARN,"killall -SIGKILL python")
@@ -139,7 +140,7 @@ class Parser:
     async def make_custom_query(path: str) -> Any:
         return await extract_json(f'{URL}{path}')
 
-async def bot_status(status:int, message: str) -> bool:
+async def bot_status(status:int, message: str):
     BOT.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
 
 def get_status(status:int):
