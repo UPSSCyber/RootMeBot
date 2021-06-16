@@ -7,8 +7,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from discord.channel import TextChannel
 from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
-from discord import ActivityType,Activity,Status
-from main import bot
+
 
 import bot.manage.channel_data as channel_data
 from bot.api.fetch import search_rootme_user, get_solved_challenges, get_diff, get_all_challenges
@@ -21,9 +20,7 @@ from bot.wraps import stop_if_args_none
 
 challenges_type = Optional[Dict[str, Union[str, int, List[str]]]]
 all_challenges = {}  #  all challenges by discord_server
-OK=1
-WARN=2
-ERR=3
+
 
 def display_parts(message: str) -> List[str]:
     message = message.split('\n')
@@ -324,17 +321,6 @@ async def display_cron(id_discord_server: int, db: DatabaseManager, channel: Tex
         await db.update_user_info(id_discord_server, user['rootme_username'], score, number_challenge_solved)
 
     return messages
-
-async def bot_status(status:int, message: str) -> bool:
-    bot.bot.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
-
-def get_status(status:int):
-    if status == OK:
-        return Status.online
-    elif status == WARN:
-        return Status.idle
-    elif status == ERR:
-        return Status.do_not_disturb
 
 async def display_api_query(path: str) -> Optional[str]:
     return await Parser.make_custom_query(path)
