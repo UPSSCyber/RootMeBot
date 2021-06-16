@@ -7,19 +7,22 @@ from copy import copy
 import aiohttp
 import aiohttp.client_exceptions
 import aiohttp.client_reqrep
+from discord.ext.commands.bot import Bot
 from dotenv import load_dotenv
 import asyncio
 
 from bot.colors import red, purple, yellow
-from bot.constants import URL, timeout, BOT
-from discord import ActivityType,Activity,Status
+from bot.constants import URL, timeout
+from discord import Game,Status
 OK=1
 WARN=2
 ERR=3
 
+
 load_dotenv()
 response_profile = Optional[List[Dict[str, Any]]]
 response_profile_complete = Optional[Dict[str, Any]]
+bot:Bot=None
 
 ROOTME_ACCOUNT_LOGIN = environ.get('ROOTME_ACCOUNT_LOGIN')
 ROOTME_ACCOUNT_PASSWORD = environ.get('ROOTME_ACCOUNT_PASSWORD')
@@ -38,7 +41,7 @@ async def get_cookies():
                 print(response)
                 if response.status == 200:
                     content = await response.json(content_type=None)
-                    bot_status(OK,"All is fine")
+                    await bot_status(OK,"hacker Root-me")
                     return "Logged in"
                 elif response.status == 429:   # Too Many requests
                     return await get_cookies()
@@ -47,7 +50,7 @@ async def get_cookies():
         except asyncio.TimeoutError:
             return await get_cookies()
         except:
-            bot_status(ERR,"💀 Unable to log-in")
+            await bot_status(ERR,"💀 Unable to log-in")
             return await get_cookies()
 
 
@@ -57,15 +60,15 @@ async def get_status():
         try:
             async with session.get(f'{URL}/challenges', timeout=timeout) as response:
                 if response.status == 429:
-                    bot_status(WARN,"killall -SIGKILL python")
+                    await bot_status(ERR,"kill le daemon discord en boucle")
                     return await get_status()
-                bot_status(OK,"Connecté")
+                await bot_status(OK,"Connecté")
                 return response.status
         except asyncio.TimeoutError:
-            bot_status(WARN,"killall -SIGKILL python")
+            await bot_status(ERR,"kill le daemon discord en boucle")
             return await get_status()
         except:
-            bot_status(WARN,"killall -SIGKILL python")
+            await bot_status(ERR,"kill le daemon discord en boucle")
             return await get_status()
 
 
@@ -80,26 +83,27 @@ async def request_to(url: str) -> response_profile:
                     return None
                 #  purple(f'[{response.status}] {url}')
                 if response.status == 200:
-                    bot_status(OK,"All is fine")
+                    await bot_status(OK,"hacker Root-me")
                     return await response.json()
                 elif response.status == 401:
-                    bot_status(WARN,"killall -SIGKILL python")
+                    await bot_status(ERR,"kill le daemon discord en boucle")
                     if await get_status() == 200:
                         purple(f'{url} -> probably a premium challenge')
                         return None
                     await get_cookies()
                     return await request_to(url)
                 elif response.status == 429:   # Too Many requests
-                    bot_status(WARN,"killall -SIGKILL python")
+                    await bot_status(ERR,"kill le daemon discord en boucle")
                     return await request_to(url)
                 else:
-                    bot_status(ERR,"Wtf ?")
+                    await bot_status(ERR,"Wtf ?")
                     return None
         except asyncio.TimeoutError:
-            bot_status(WARN,"killall -SIGKILL python")
+            await bot_status(ERR,"kill le daemon discord en boucle")
             return await request_to(url)
-        except:
-            bot_status(WARN,"killall -SIGKILL python")
+        except Exception as e:
+            print(e)
+            await bot_status(ERR,"kill le daemon discord en boucle")
             return await request_to(url)
 
 
@@ -140,8 +144,14 @@ class Parser:
     async def make_custom_query(path: str) -> Any:
         return await extract_json(f'{URL}{path}')
 
+    @staticmethod
+    async def set_bot(b:Bot):
+        global bot
+        bot = b
+
 async def bot_status(status:int, message: str):
-    BOT.change_presence(activity=Activity(type=ActivityType.custom,state=message),status=get_status(status))
+    if bot is not None:
+        await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
 
 def get_status(status:int):
     if status == OK:

@@ -1,6 +1,8 @@
 import re
 from typing import Dict, List, Optional
 
+from discord.ext.commands.bot import Bot
+
 from bot.api.parser import Parser, response_profile_complete
 from bot.colors import red
 from bot.constants import LANGS
@@ -59,6 +61,9 @@ async def search_rootme_user(username: str) -> Optional[List]:
 
 async def get_challenges(lang: str):
     return await Parser.extract_challenges(lang)
+
+async def set_bot(bot:Bot):
+    await Parser.set_bot(bot)
 
 
 async def get_all_challenges():

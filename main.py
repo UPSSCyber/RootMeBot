@@ -6,7 +6,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 import bot.display.embed as disp
-from bot.api.fetch import get_challenges
+from bot.api.fetch import get_challenges, set_bot
 from bot.colors import green, red
 from bot.constants import LANGS, FILENAME, BOT
 from bot.database.manager import DatabaseManager
@@ -22,7 +22,7 @@ class RootMeBot:
         """ Discord Bot to catch RootMe events made by zTeeed """
         self.db = db
         self.bot = commands.Bot(command_prefix='!')
-        BOT = self.bot
+        
 
     async def cron(self):
         await self.bot.wait_until_ready()
@@ -36,6 +36,7 @@ class RootMeBot:
     def catch(self):
         @self.bot.event
         async def on_ready():
+            await set_bot(self.bot)
             for server in self.bot.guilds:
                 green(f'RootMeBot is starting on the following server: "{server.name}" !')
 
