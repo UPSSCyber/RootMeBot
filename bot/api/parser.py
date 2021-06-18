@@ -2,6 +2,7 @@ import sys
 from os import environ
 from typing import Any, List, Dict, Optional, Union
 from datetime import datetime, timezone
+import time
 from copy import copy
 
 import aiohttp
@@ -31,6 +32,9 @@ SLEEP = int(environ.get('SLEEP_TIME'))
 
 cookie_jar = aiohttp.CookieJar()
 cookie_jar.update_cookies({"api_key": ROOTME_API_KEY})
+
+current_status = ("",Status.offline)
+latestchange= 0.0
 
 async def get_cookies():
     async with aiohttp.ClientSession(cookie_jar=cookie_jar) as session:
@@ -151,7 +155,10 @@ class Parser:
 
 async def bot_status(status:int, message: str):
     if bot is not None:
-        await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
+        global current_status
+        global latestchange
+        if current_status != (message,get_status(status)) and time.time()-latestchange > 20:
+            await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
 
 def get_status(status:int):
     if status == OK:
