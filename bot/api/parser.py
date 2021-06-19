@@ -157,8 +157,17 @@ async def bot_status(status:int, message: str):
     if bot is not None:
         global current_status
         global latestchange
-        if current_status != (message,get_status(status)) and time.time()-latestchange > 20:
-            await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
+        if current_status != (message,get_status(status)) and time.time()- latestchange > 10:
+            current_status = (message,get_status(status))
+            latestchange = time.time()
+            try:
+                await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
+            except:
+                try:
+                    await bot.change_presence(activity=Game(name=message, type=1),status=get_status(status))
+                except:
+                    return # anyway no updates
+        
 
 def get_status(status:int):
     if status == OK:
